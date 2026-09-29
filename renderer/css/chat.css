@@ -1,0 +1,171 @@
+/* Test chat panel next to the aquarium (operator tool, never part of the stream picture). */
+:root {
+  --chat-bg: rgba(4, 19, 31, 0.82);
+  --chat-line: rgba(150, 220, 255, 0.2);
+  --chat-ink: #eaf8ff;
+  --chat-dim: rgba(214, 238, 250, 0.66);
+  --chat-cyan: #5fe0ff;
+  --chat-coral: #ff8a7a;
+  --chat-ok: #7fe3b0;
+  --chat-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --chat-w: 360px;
+}
+
+[hidden] { display: none !important; }
+.chat-dock, .chat-dock * { box-sizing: border-box; }
+
+.chat-dock {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  width: var(--chat-w);
+  max-width: calc(100vw - 32px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
+  pointer-events: none;
+  font-family: var(--font);
+  color: var(--chat-ink);
+}
+.chat-dock:empty { display: none; }
+
+.chat {
+  pointer-events: auto;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px 16px;
+  border-radius: 16px;
+  background: var(--chat-bg);
+  border: 1px solid var(--chat-line);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.chat-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.chat-title { font-weight: 700; font-size: 15px; letter-spacing: 0.02em; }
+.chat-sub { margin-top: 3px; color: var(--chat-dim); font-size: 12.5px; line-height: 1.4; }
+
+.chat-feed {
+  flex: 1;
+  min-height: 120px;
+  margin: 0;
+  padding: 8px 10px;
+  list-style: none;
+  overflow-y: auto;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.26);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.chat-feed li { overflow-wrap: anywhere; }
+.chat-feed .who { font-weight: 700; margin-right: 6px; }
+.chat-feed .who.yt::before { content: "▶"; color: #ff4e45; margin-right: 4px; font-size: 10px; vertical-align: 1px; }
+.chat-feed .txt { color: var(--chat-ink); }
+.chat-feed .tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font: 500 11px/1.5 var(--chat-mono);
+  white-space: nowrap;
+  vertical-align: 1px;
+}
+.chat-feed .tag.ok { background: rgba(127, 227, 176, 0.16); color: var(--chat-ok); }
+.chat-feed .tag.rej { background: rgba(255, 138, 122, 0.14); color: var(--chat-coral); }
+.chat-feed .tag.wait, .chat-feed .tag.dim { background: rgba(255, 255, 255, 0.07); color: var(--chat-dim); }
+.chat-feed li.sys { color: var(--chat-dim); font-style: italic; }
+.chat-empty { margin-top: -6px; color: var(--chat-dim); font-size: 12.5px; }
+
+.chat-say { display: flex; gap: 6px; }
+.chat-say input {
+  min-width: 0;
+  font: 500 13px/1.2 var(--font);
+  color: var(--chat-ink);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--chat-line);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+.chat-say .chat-name { width: 64px; flex: none; }
+.chat-say .chat-text { flex: 1; }
+.chat-say input::placeholder { color: var(--chat-dim); }
+
+.chat-btn {
+  font: 600 13px/1.2 var(--font);
+  color: var(--chat-ink);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--chat-line);
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.1s;
+}
+.chat-btn:hover { border-color: var(--chat-cyan); background: rgba(95, 224, 255, 0.1); }
+.chat-btn:active { transform: translateY(1px); }
+.chat-btn:focus-visible, .chat input:focus-visible, .chat summary:focus-visible { outline: 2px solid var(--chat-cyan); outline-offset: 2px; }
+.chat-btn.primary { background: var(--chat-cyan); color: #032533; border-color: var(--chat-cyan); }
+.chat-btn.primary:hover { background: #8aeaff; }
+.chat-btn.danger { border-color: rgba(255, 138, 122, 0.6); color: #ffd9d3; }
+.chat-btn.danger:hover { background: rgba(255, 138, 122, 0.14); border-color: var(--chat-coral); }
+.chat-btn.ghost { padding: 5px 10px; font-size: 12px; background: transparent; }
+.chat-btn.chip { padding: 4px 9px; border-radius: 999px; font: 500 12px/1.3 var(--chat-mono); }
+
+.chat-samples { display: flex; flex-wrap: wrap; gap: 6px; }
+.chat-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.chat-status { font-size: 12px; color: var(--chat-dim); font-variant-numeric: tabular-nums; }
+
+.chat-host summary {
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--chat-dim);
+  list-style: none;
+}
+.chat-host summary::-webkit-details-marker { display: none; }
+.chat-host summary::before { content: "▸ "; }
+.chat-host[open] summary::before { content: "▾ "; }
+.chat-hint { font-weight: 500; letter-spacing: 0.02em; text-transform: none; }
+.chat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }
+.chat-grid .chat-btn { text-align: left; }
+
+.chat-seg { display: inline-flex; border: 1px solid var(--chat-line); border-radius: 10px; overflow: hidden; }
+.chat-seg .chat-btn { border: 0; border-radius: 0; background: transparent; }
+.chat-seg .chat-btn[aria-pressed="true"] { background: rgba(95, 224, 255, 0.2); color: #dff8ff; }
+
+.chat-open {
+  pointer-events: auto;
+  background: var(--chat-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  padding: 10px 16px;
+  font-size: 14px;
+}
+
+/* The overlay makes room for the open panel. */
+body.chat-open .ov-feed { right: calc(var(--chat-w) + 32px); }
+body.chat-open .ov-bottom { right: calc(var(--chat-w) + 32px); }
+
+@media (max-width: 700px) {
+  .chat-dock { top: auto; left: 16px; width: auto; height: 64vh; }
+  body.chat-open .ov-feed, body.chat-open .ov-bottom { right: 1.8vw; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-btn { transition: none; }
+}

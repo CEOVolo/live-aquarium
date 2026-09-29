@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aquarium Control</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8E%9B%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">🐠 Live Aquarium <span class="dim">· пульт</span></div>
+    <div class="pills" id="pills"></div>
+    <div class="mode" role="group" aria-label="Режим">
+      <button data-mode="interactive" id="mode-interactive">Интерактив</button>
+      <button data-mode="tv" id="mode-tv">ТВ-режим</button>
+    </div>
+  </header>
+
+  <main class="grid">
+    <section class="col">
+      <div class="card">
+        <div class="card-h">Эфир <span class="dim" id="preview-note"></span></div>
+        <div class="preview"><iframe id="preview" title="Превью аквариума" loading="lazy"></iframe></div>
+        <div class="row links">
+          <a id="link-interactive" target="_blank" rel="noopener">Открыть: интерактив ↗</a>
+          <a id="link-tv" target="_blank" rel="noopener">Открыть: ТВ ↗</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">События <span class="dim">— от администратора, без ограничений</span></div>
+        <div class="buttons" id="triggers">
+          <button data-kind="feed">🍤 Покормить</button>
+          <button data-kind="shark">🦈 Акула</button>
+          <button data-kind="jellyfish">🪼 Медузы</button>
+          <button data-kind="night">🌙 Ночь</button>
+          <button data-kind="day">☀️ День</button>
+          <button data-kind="bubbles">🫧 Пузыри</button>
+          <button data-kind="golden">✨ Золотая рыбка</button>
+        </div>
+        <div class="row">
+          <select id="spawn-species">
+            <option value="any">случайный вид</option>
+            <option value="chromis">Chromis</option>
+            <option value="clownfish">Clownfish</option>
+            <option value="tang">Blue Tang</option>
+            <option value="yellowtang">Yellow Tang</option>
+            <option value="gramma">Royal Gramma</option>
+            <option value="cardinal">Cardinalfish</option>
+          </select>
+          <button id="spawn">🐠 Добавить рыбу</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">Тестовый чат <span class="dim">— как обычный зритель, со всеми ограничениями</span></div>
+        <form class="row" id="chat-form">
+          <input id="chat-user" value="Tester" aria-label="Имя" style="max-width: 120px">
+          <input id="chat-text" placeholder="SHARK, покормите рыбок, !fish clownfish…" aria-label="Сообщение" autocomplete="off">
+          <button type="submit">Отправить</button>
+        </form>
+        <div class="chips" id="quick"></div>
+        <div class="dim small" id="chat-result"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">Симулятор зрителей</div>
+        <div class="row">
+          <select id="sim-scenario">
+            <option value="calm">спокойный (12)</option>
+            <option value="normal" selected>обычный (80)</option>
+            <option value="busy">активный (400)</option>
+          </select>
+          <input id="sim-viewers" type="number" min="1" max="5000" placeholder="зрителей" style="max-width: 110px">
+          <button id="sim-start">Запустить</button>
+          <button id="sim-stop" class="ghost">Стоп</button>
+        </div>
+        <div class="row">
+          <select id="raid-intent">
+            <option value="shark">SHARK</option>
+            <option value="feed">FEED</option>
+            <option value="jellyfish">JELLY</option>
+            <option value="night">NIGHT</option>
+            <option value="wish">WISH</option>
+            <option value="spawn">!fish</option>
+          </select>
+          <input id="raid-viewers" type="number" min="1" max="5000" value="1000" style="max-width: 110px" aria-label="Зрителей в рейде">
+          <button id="raid">Рейд: все пишут одно и то же 20 с</button>
+        </div>
+        <div class="dim small" id="sim-status"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">YouTube чат</div>
+        <div class="kv" id="yt"></div>
+        <form class="row" id="yt-form">
+          <input id="yt-video" placeholder="ID или ссылка на трансляцию" aria-label="Видео">
+          <button type="submit">Подключить</button>
+          <button type="button" id="yt-stop" class="ghost">Стоп</button>
+        </form>
+        <div class="dim small">API-ключ задаётся на сервере (YOUTUBE_API_KEY) и в браузер не передаётся.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">AI-парсер</div>
+        <div class="kv" id="ai"></div>
+      </div>
+    </section>
+
+    <section class="col">
+      <div class="card">
+        <div class="card-h">Голосования и кулдауны <span class="dim" id="active"></span></div>
+        <table class="meters"><tbody id="meters"></tbody></table>
+      </div>
+
+      <div class="card">
+        <div class="card-h">Метрики</div>
+        <div class="stats" id="stats"></div>
+        <div class="kv small" id="rejects"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">Лента событий</div>
+        <ol class="events" id="events"></ol>
+      </div>
+
+      <div class="card">
+        <div class="card-h">Чат <span class="dim">— что понял парсер и что решил режиссёр</span></div>
+        <div class="chat-wrap"><table class="chat"><tbody id="chat"></tbody></table></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">Рыбы зрителей <span class="dim">— модерация имён</span></div>
+        <ul class="owned" id="owned"></ul>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="/js/admin.js"></script>
+</body>
+</html>

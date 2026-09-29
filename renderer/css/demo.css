@@ -1,0 +1,9 @@
+/* Standalone demo page: fonts and page sizing. The chat panel itself lives in chat.css. */
+:root {
+  --font: "Figtree", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: dark;
+}
+
+html, body { height: 100%; }
+body { background: #031522; color: #eaf8ff; }
+#scene { width: 100%; height: 100%; }

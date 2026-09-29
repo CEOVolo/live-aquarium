@@ -1,0 +1,15 @@
+node_modules/
+data/
+.env
+.playwright-mcp/
+*.log
+.DS_Store
+dist/
+.claude/settings.local.json
+# the first reef shark model, replaced by the great white (not used)
+assets/models/raw/shark.glb
+# Unreal Engine project (the look test lives in unreal/)
+unreal/**/Binaries/
+unreal/**/Intermediate/
+unreal/**/Saved/
+unreal/**/DerivedDataCache/
