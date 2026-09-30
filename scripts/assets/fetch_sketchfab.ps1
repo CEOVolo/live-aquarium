@@ -1,13 +1,15 @@
 # Скачивание сканов рифа с Sketchfab по файлу временных ссылок.
 # Ссылки выдаёт только залогиненная сессия Sketchfab: их собирает браузер пользователя
 # (скрипт на странице sketchfab.com) в lt_sketchfab_links.json в «Загрузках».
-#   powershell -File scripts/assets/fetch_sketchfab.ps1 [-Links путь]
-# Ссылки живут несколько минут — запускать сразу. Сами ссылки не печатаются.
-param([string]$Links = (Join-Path $env:USERPROFILE "Downloads\lt_sketchfab_links.json"))
+#   powershell -File scripts/assets/fetch_sketchfab.ps1 [-Links путь] [-Folder sketchfab|fish]
+# sketchfab — сканы рифа (import_reef.py), fish — рыбы. Ссылки живут несколько минут — запускать
+# сразу. Сами ссылки не печатаются.
+param([string]$Links = (Join-Path $env:USERPROFILE "Downloads\lt_sketchfab_links.json"),
+      [string]$Folder = "sketchfab")
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"  # полоса прогресса замедляет Invoke-WebRequest в разы
 $root = Resolve-Path (Join-Path $PSScriptRoot "..\..")
-$dest = Join-Path $root "assets\models\raw\sketchfab"
+$dest = Join-Path $root "assets\models\raw\$Folder"
 New-Item -ItemType Directory -Force $dest | Out-Null
 
 $data = Get-Content $Links -Raw -Encoding utf8 | ConvertFrom-Json

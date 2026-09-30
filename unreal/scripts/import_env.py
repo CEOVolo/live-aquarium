@@ -84,5 +84,19 @@ def import_rocks():
                     name, path, e.x * 2, e.y * 2, e.z * 2))
 
 
+def import_generated():
+    """Сгенерированные меши (scripts/models/make_*.py): взвесь в воде. Без Nanite — полупрозрачные."""
+    src = os.path.join(REPO, "assets", "models", "generated", "marine_snow.glb")
+    if not os.path.exists(src):
+        log("no marine_snow.glb — run scripts/models/make_marine_snow.py")
+        return
+    p = unreal.InterchangeGenericAssetsPipeline()
+    p.mesh_pipeline.set_editor_property("build_nanite", False)
+    p.material_pipeline.set_editor_property("import_materials", False)
+    paths = run([task(src, "/Game/LookTest/Generated", p)])
+    log("generated: {}".format(", ".join(paths)))
+
+
 import_textures()
 import_rocks()
+import_generated()

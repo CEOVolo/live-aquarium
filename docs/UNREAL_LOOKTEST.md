@@ -26,10 +26,19 @@
 
 Скрипты выполняются в **открытом** редакторе через Python Remote Execution (включено в `Config/DefaultEngine.ini`); окно проекта не закрывать, свернуть можно. `$py` — Python движка: `D:\UE\UE_5.8\Engine\Binaries\ThirdParty\Python3\Win64\python.exe`.
 
-1. Ассеты: `scripts/assets/fetch_polyhaven.ps1` (CC0, без входа); сканы Sketchfab — только из залогиненного браузера: скрипт на странице sketchfab.com собирает временные ссылки в `lt_sketchfab_links.json` («Загрузки»), затем `scripts/assets/fetch_sketchfab.ps1` (ссылки живут минуты). Модели и авторы — в `assets/models/CREDITS.md`.
+1. Ассеты: `scripts/assets/fetch_polyhaven.ps1` (CC0, без входа); сканы и рыбы Sketchfab — только из залогиненного браузера: скрипт на странице sketchfab.com собирает временные ссылки в `lt_sketchfab_links.json` («Загрузки»; в Chrome разрешить sketchfab.com скачивать несколько файлов), затем `scripts/assets/fetch_sketchfab.ps1` (сканы) или `... -Folder fish` (рыбы); ссылки живут минуты. Взвесь: `python scripts/models/make_marine_snow.py`. Модели и авторы — в `assets/models/CREDITS.md`.
 2. Открыть `unreal/LiveAquarium/LiveAquarium.uproject`.
-3. По порядку: `$py unreal/scripts/ue_remote.py import_fish.py`, затем `import_env.py`, `import_reef.py`, `build_materials.py`, `build_scene.py`.
-4. Кадры: `powershell -File unreal/scripts/shots.ps1 [-Cams Cam_Wide,...]` → `unreal/LiveAquarium/Saved/Screenshots/WindowsEditor/lt_<камера>.png`.
+3. По порядку: `$py unreal/scripts/ue_remote.py import_fish.py`, затем `import_env.py`, `import_reef.py`, `build_materials.py`, `build_scene.py`, `build_sequence.py` (секвенция держит ссылки на актёров — пересобирать после каждого `build_scene.py`).
+4. Кадры: `powershell -File unreal/scripts/shots.ps1 [-Cams Cam_Wide,...]` → `unreal/LiveAquarium/Saved/Screenshots/WindowsEditor/lt_<камера>.png`; осмотр сканов — `inspect_cams.py`, осей рыб — `fish_lineup.py`, сводный лист — `contact_sheet.ps1`.
+5. Ролик: `$py ... render_movie.py` (Movie Render Queue, ~1 мин на 36 с), затем `unreal/scripts/encode_movie.ps1` → `Saved/MovieRenders/LiveAquarium_looktest.mp4`.
+6. FPS: `unreal/scripts/measure_fps.ps1` (игра 1920x1080 с Cam_Wide, CSV-профайлер; редактор лучше закрыть).
+
+### Результат пробы (30.09.2026, RTX 4060 Laptop 8 ГБ)
+
+- Сцена: 8 фотосканов рифа (Nanite, свой материал: снята «впечатанная» синева воды, вырезано захваченное дно), песок и камни Poly Haven, вода — плотный туман + объёмный туман + купол «неба» толщи, каустики (light function), лучи в толще, взвесь; акула (скелет, плавание/укус), золотая рыбка, клоуны, стайки сержант-майоров, французский ангел (плавание — материал M_Fish).
+- Ролик 36 с (5 планов, бросок акулы с открытой пастью) и 6 кадров 1920x1080 — `Saved/Deliverables/`.
+- Реальное время, 1920x1080, камера стрима: **~89 FPS в среднем** (медиана 91, 1% low 39 — редкие подгрузки шейдеров), GPU ~10.3 мс/кадр.
+- Слабые места: большой скан рифа вблизи гранёный (низкополигональный) — крупные планы строить на губках и элкхорне; модель клоуна простая; анемоны среди бесплатных сканов нет.
 
 Грабли: Python редактора держит модули между запусками (скрипты делают `importlib.reload(lt_common)`); материалы не удалять и не пересоздавать — уровень теряет ссылки (серый материал по умолчанию), `fresh_material` вычищает узлы в существующем; безымянные входы узлов (Desaturation, Clamp) из Python не подключаются; «Use Less CPU when in Background» выключено в `Config/DefaultEditorSettings.ini`, иначе редактор в фоне не рендерит кадры; `UnrealEditor.exe -ExecutePythonScript` закрывает редактор сразу после скрипта — для рендера не годится.
 

@@ -24,10 +24,19 @@ Photogrammetry of live Caribbean reef, CC Attribution 4.0. Used in Unreal with c
 | Underwater Coral Reef Photogrammetry | vividrealitysolutions | https://sketchfab.com/3d-models/underwater-coral-reef-photogrametry-3d-scan-ef94bf857d2a4af5b3691d19d57baaaa |
 | Coral Reef Outcrop | BenMRitt | https://sketchfab.com/3d-models/coral-reef-outcrop-8bc72c9e4575470ea30d1313e48b730c |
 
+## Reef fish (Unreal look test, `raw/fish/`)
+
+CC Attribution 4.0. Animated in Unreal by a swim material (World Position Offset), not rigged.
+
+| Model | Author | Source |
+|---|---|---|
+| Damselfish curacao (sergeant major) | denvr_3d | https://sketchfab.com/3d-models/damselfish-curacao-3cf993dacd1c488eb0f511a6c5830609 |
+| French Angelfish | denvr_3d | https://sketchfab.com/3d-models/french-angelfish-ff79beafce4a42ce93ed6f9c0258c8d3 |
+
 ## Seabed and rocks (Unreal look test)
 
 CC0 from Poly Haven (https://polyhaven.com), no attribution required: textures `coast_sand_01`, `dense_sand`, `coral_gravel` (`assets/textures/raw/`), models `coast_rocks_02`, `coast_rocks_05`, `rock_09`, `boulder_01` (`raw/polyhaven/`). Download: `scripts/assets/fetch_polyhaven.ps1`.
 
 For the stream description:
 
-> 3D models: "Clownfish" by Bindestrek, "Great White Shark" by LasquetiSpice, "Ryukin goldfish" by somitsu, reef scans by Patric Lengacher, vividrealitysolutions and BenMRitt — Sketchfab, CC BY 4.0.
+> 3D models: "Clownfish" by Bindestrek, "Great White Shark" by LasquetiSpice, "Ryukin goldfish" by somitsu, reef scans by Patric Lengacher, vividrealitysolutions and BenMRitt, "Damselfish curacao" and "French Angelfish" by denvr_3d — Sketchfab, CC BY 4.0.

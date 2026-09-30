@@ -62,3 +62,20 @@ def color(r, g, b, a=1.0):
 
 # Цвет воды у горизонта: один и тот же для тумана и купола «неба», чтобы не было шва
 WATER_HORIZON = color(0.01, 0.075, 0.095)
+
+# Статичные рыбы (плывут за счёт World Position Offset в M_Fish). Оси — в локальных координатах
+# модели (определены по fish_lineup.py): nose — куда смотрит нос, up — спина.
+# Параметры плавания — как withSwim в renderer/js/fish/school.js: amp — амплитуда хвоста
+# в долях длины, amp_head — у головы, hz — частота взмахов, k — число радиан волны вдоль тела.
+FISH_SPECIES = {
+    "clownfish": dict(nose=(0, 1, 0), up=(0, 0, 1), length_cm=10, hz=3.2, amp=0.09, amp_head=0.015, k=4.5),
+    "damselfish": dict(nose=(0, 1, 0), up=(0, 0, 1), length_cm=15, hz=2.6, amp=0.08, amp_head=0.012, k=4.5),
+    "french_angelfish": dict(nose=(1, 0, 0), up=(0, 0, 1), length_cm=35, hz=1.1, amp=0.05, amp_head=0.008,
+                             k=3.5),
+}
+
+
+def fish_side(spec):
+    """Боковая ось = up x nose (в локальных координатах)."""
+    n, u = spec["nose"], spec["up"]
+    return (u[1] * n[2] - u[2] * n[1], u[2] * n[0] - u[0] * n[2], u[0] * n[1] - u[1] * n[0])

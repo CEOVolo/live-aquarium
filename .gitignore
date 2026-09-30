@@ -18,5 +18,7 @@ __pycache__/
 # downloaded assets are fetched again by scripts/assets/ (see docs/UNREAL_LOOKTEST.md)
 unreal/**/Content/
 assets/models/raw/sketchfab/
+assets/models/raw/fish/
 assets/models/raw/polyhaven/
 assets/textures/raw/
+assets/models/generated/

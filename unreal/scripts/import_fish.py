@@ -9,7 +9,9 @@ import unreal
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 RAW = os.path.join(REPO, "assets", "models", "raw")
 
-FISH = ["great_white", "ryukin_goldfish", "clownfish"]
+# путь от assets/models/raw без .glb; fish/* — скачанные fetch_sketchfab.ps1 -Folder fish
+FISH = ["great_white", "ryukin_goldfish", "clownfish",
+        "fish/damselfish", "fish/french_angelfish", "fish/blue_tang"]
 DEST_ROOT = "/Game/LookTest/Fish"
 
 
@@ -23,12 +25,13 @@ def make_pipeline():
     return p
 
 
-def import_glb(name):
+def import_glb(rel):
+    name = rel.rsplit("/", 1)[-1]
     dest = DEST_ROOT + "/" + name
     if unreal.EditorAssetLibrary.does_directory_exist(dest):
         unreal.EditorAssetLibrary.delete_directory(dest)
     task = unreal.AssetImportTask()
-    task.filename = os.path.join(RAW, name + ".glb")
+    task.filename = os.path.join(RAW, *rel.split("/")) + ".glb"
     task.destination_path = dest
     task.automated = True
     task.replace_existing = True
@@ -52,11 +55,26 @@ def describe(path):
     return info
 
 
-wanted = os.environ.get("LOOKTEST_FISH")
-for fish in (wanted.split(",") if wanted else FISH):
+def materials_of(path):
+    a = unreal.load_asset(path)
+    if isinstance(a, unreal.MaterialInstance):
+        parent = a.get_editor_property("parent")
+        return "{} <- {}".format(a.get_name(), parent.get_name() if parent else None)
+    return None
+
+
+# только часть: Saved/lt_fish.txt со списком через запятую (как в FISH)
+lst = os.path.join(unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_saved_dir()), "lt_fish.txt")
+wanted = None
+if os.path.exists(lst):
+    with open(lst, encoding="utf-8-sig") as f:
+        wanted = [x.strip() for x in f.read().split(",") if x.strip()]
+for fish in (wanted or FISH):
     paths = import_glb(fish)
     unreal.log("LOOKTEST import {}: {} objects".format(fish, len(paths)))
     for p in paths:
-        if "/Textures/" in p or "/Materials/" in p:
+        if "/Textures/" in p:
             continue
-        unreal.log("LOOKTEST   " + describe(p))
+        info = materials_of(p) if "/Materials/" in p else describe(p)
+        if info:
+            unreal.log("LOOKTEST   " + info)

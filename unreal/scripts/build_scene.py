@@ -7,6 +7,7 @@
 """
 import math
 import os
+import random
 import sys
 
 import unreal
@@ -15,12 +16,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import importlib  # noqa: E402
 import lt_common  # noqa: E402
 importlib.reload(lt_common)  # редактор держит модули между запусками
-from lt_common import MAP, MAT_DIR, WATER_HORIZON, actors, color, levels, log, setp, spawn
+from lt_common import FISH_SPECIES, MAP, MAT_DIR, WATER_HORIZON, actors, color, levels, log, setp, spawn
 
 FISH = "/Game/LookTest/Fish"
 SHARK = FISH + "/great_white/great_white/SkeletalMeshes/"
 GOLD = FISH + "/ryukin_goldfish/ryukin_goldfish/SkeletalMeshes/"
-CLOWN = FISH + "/clownfish/clownfish/StaticMeshes/"
 
 ROCKS = "/Game/LookTest/Rocks/"
 REEF = "/Game/LookTest/Reef/"
@@ -59,12 +59,14 @@ def new_level():
 
 def water_and_light():
     # «Солнце»: светит сверху сквозь поверхность, каустики — light function.
-    sun = spawn(unreal.DirectionalLight, "Sun", (0, 0, 2000), (0, -68, 25))
+    # сверху и сбоку-спереди относительно камеры общего плана: кораллы освещены сбоку (цвет),
+    # а лучи в толще воды ещё видны (в контровом свете риф становится силуэтом)
+    sun = spawn(unreal.DirectionalLight, "Sun", (0, 0, 2000), (0, -62, 115))
     lc = sun.light_component
     # на глубине 5-10 м красное уже поглощено толщей воды — свет сине-зелёный
     lc.set_intensity(10.0)
     lc.set_light_color(color(0.62, 0.88, 1.0))
-    setp(lc, volumetric_scattering_intensity=3.0, cast_shadows=True,
+    setp(lc, volumetric_scattering_intensity=2.0, cast_shadows=True,
          light_function_scale=unreal.Vector(1, 1, 1))
     lc.set_light_function_material(unreal.load_asset(MAT_DIR + "/M_Caustics"))
     setp(lc, disabled_brightness=0.35)
@@ -74,7 +76,7 @@ def water_and_light():
     sc = sky.light_component
     setp(sc, real_time_capture=True, source_type=unreal.SkyLightSourceType.SLS_CAPTURED_SCENE,
          lower_hemisphere_is_black=True, lower_hemisphere_color=color(0.0, 0.02, 0.03),
-         intensity=1.0)
+         intensity=1.6)
 
     # Вода = плотный экспоненциальный туман + объёмный туман (лучи, поглощение).
     # Плотность в UE — на 1000 см: WATER_DENSITY 2.0 ≈ ослабление в e раз на ~5 м, видимость ~15 м.
@@ -119,7 +121,9 @@ def water_and_light():
          override_film_grain_intensity=True, film_grain_intensity=0.12,
          override_vignette_intensity=True, vignette_intensity=0.45,
          override_scene_fringe_intensity=True, scene_fringe_intensity=0.4,
-         override_white_temp=True, white_temp=7200.0)
+         override_white_temp=True, white_temp=7200.0,
+         # рендер ролика включает размытие движения; сильное смазывает акулу в броске
+         override_motion_blur_amount=True, motion_blur_amount=0.2)
     ppv.set_editor_property("settings", s)
 
 
@@ -190,14 +194,37 @@ def reef_piece(label, name, loc, yaw=0.0, size_m=None, sink_cm=5.0):
 def reef():
     """Риф из фотосканов (Sketchfab, CC BY). Центр композиции — большой скан рифа."""
     # sink_cm: сканы захватили кусок дна («подол») — утапливаем его в песок
+    # плотная группа: большой риф в центре, вокруг и перед ним — отдельные кораллы и губки;
+    # повторы сканов развёрнуты и отмасштабированы по-разному
     reef_piece("Reef_Main", "reef_photogrammetry", (750, 0, 0), yaw=0, size_m=8.0, sink_cm=45)
-    reef_piece("Reef_Outcrop", "reef_outcrop", (350, -520, 0), yaw=30, size_m=4.0, sink_cm=30)
-    reef_piece("Reef_BarrelLedge", "barrel_sponge", (850, 600, 0), yaw=200, size_m=4.5, sink_cm=20)
+    reef_piece("Reef_BarrelLedge", "barrel_sponge", (700, 620, 0), yaw=200, size_m=4.5, sink_cm=20)
+    reef_piece("Reef_Barrel2", "barrel_sponge", (650, -700, 0), yaw=40, size_m=3.5, sink_cm=20)
     reef_piece("Reef_Elkhorn", "elkhorn_coral", (320, 380, 0), yaw=60, size_m=2.6, sink_cm=15)
-    reef_piece("Reef_Stovepipe", "stovepipe_sponge", (480, 180, 0), yaw=0, size_m=1.6)
-    reef_piece("Reef_GreatStar", "great_star_coral", (-80, -300, 0), yaw=120, size_m=1.6, sink_cm=25)
-    reef_piece("Reef_Brain", "brain_coral", (-250, 180, 0), yaw=0, size_m=1.2)
-    reef_piece("Reef_Lettuce", "lettuce_coral", (80, 120, 0), yaw=300, size_m=1.3)
+    reef_piece("Reef_Elkhorn2", "elkhorn_coral", (420, -520, 0), yaw=210, size_m=3.0, sink_cm=15)
+    reef_piece("Reef_Stovepipe", "stovepipe_sponge", (330, 200, 0), yaw=0, size_m=1.6)
+    reef_piece("Reef_GreatStar", "great_star_coral", (280, -380, 0), yaw=150, size_m=1.8, sink_cm=25)
+    reef_piece("Reef_Brain", "brain_coral", (80, -250, 0), yaw=0, size_m=1.2)
+    reef_piece("Reef_Brain2", "brain_coral", (520, 320, 0), yaw=140, size_m=0.9)
+    reef_piece("Reef_Lettuce", "lettuce_coral", (360, -120, 0), yaw=300, size_m=1.3)
+    reef_piece("Reef_Lettuce2", "lettuce_coral", (120, 420, 0), yaw=80, size_m=1.0)
+
+
+def marine_snow():
+    """Взвесь в воде над рифом (меш из make_marine_snow.py, материал с дрейфом)."""
+    ar = unreal.AssetRegistryHelpers.get_asset_registry()
+    meshes = [a.get_asset() for a in ar.get_assets_by_path("/Game/LookTest/Generated", recursive=True)
+              if str(a.asset_class_path.asset_name) == "StaticMesh"]
+    if not meshes:
+        log("warn: no marine snow mesh (import_env.py)")
+        return
+    a = spawn(unreal.StaticMeshActor, "MarineSnow", (300, 0, 0))
+    c = a.static_mesh_component
+    c.set_static_mesh(meshes[0])
+    c.set_material(0, load(MAT_DIR + "/M_MarineSnow"))
+    setp(c, cast_shadow=False)
+    o, e = a.get_actor_bounds(False)
+    log("marine snow: {:.0f} x {:.0f} x {:.0f} cm, z {:.0f}..{:.0f}".format(
+        e.x * 2, e.y * 2, e.z * 2, o.z - e.z, o.z + e.z))
 
 
 def rocks():
@@ -243,38 +270,91 @@ def skeletal_fish(label, mesh_path, anim_path, length_cm, loc, yaw, pitch=0.0, p
     return body
 
 
-def static_fish(label, mesh_paths, length_cm, loc, yaw, pitch=0.0):
-    meshes = [load(p) for p in mesh_paths]
-    size = max(mesh_length(m) for m in meshes)
-    k = length_cm / size
+SHARK_LOC = (450, -250, 430)
+GOLD_LOC = (40, 180, 95)
+CLOWNS = [(60, -330, 55, 30), (35, -300, 70, 160), (85, -360, 45, 250), (20, -370, 60, 80)]
+ANGEL_LOC = (170, 140, 125)
+SCHOOLS = [  # центр, полуоси облака (см), курс (град), число рыб
+    ((430, 80, 210), (170, 110, 55), 205, 24),
+    ((180, -300, 120), (80, 60, 30), 60, 10),
+]
+
+
+def species_bounds(species):
+    ar = unreal.AssetRegistryHelpers.get_asset_registry()
+    meshes = [a.get_asset() for a in ar.get_assets_by_path(FISH + "/" + species, recursive=True)
+              if str(a.asset_class_path.asset_name) == "StaticMesh"]
+    lo, hi = [1e9] * 3, [-1e9] * 3
+    for m in meshes:
+        b = m.get_bounds()
+        for i, (c, e) in enumerate(((b.origin.x, b.box_extent.x), (b.origin.y, b.box_extent.y),
+                                    (b.origin.z, b.box_extent.z))):
+            lo[i], hi[i] = min(lo[i], c - e), max(hi[i], c + e)
+    return meshes, lo, hi
+
+
+def species_fish(label, species, loc, heading, size_k=1.0, cache={}):
+    """Статичная рыба вида species (FISH_SPECIES): нос — по курсу heading (град), спина — вверх.
+    Плывёт на месте за счёт материала M_Fish; центр габарита — в loc."""
+    spec = FISH_SPECIES[species]
+    if species not in cache:
+        cache[species] = species_bounds(species)
+    meshes, lo, hi = cache[species]
+    n = spec["nose"]
+    body = sum(abs(n[i]) * (hi[i] - lo[i]) for i in range(3))
+    k = spec["length_cm"] * size_k / body
+    yaw = heading - math.degrees(math.atan2(n[1], n[0]))
+    c = [(lo[i] + hi[i]) / 2 * k for i in range(3)]
+    a = math.radians(yaw)
+    off = (c[0] * math.cos(a) - c[1] * math.sin(a), c[0] * math.sin(a) + c[1] * math.cos(a), c[2])
+    at = (loc[0] - off[0], loc[1] - off[1], loc[2] - off[2])
     first = None
     for i, m in enumerate(meshes):
-        a = spawn(unreal.StaticMeshActor, "{}_{}".format(label, i), loc, (0, pitch, yaw))
-        a.static_mesh_component.set_static_mesh(m)
-        a.set_actor_scale3d(unreal.Vector(k, k, k))
+        act = spawn(unreal.StaticMeshActor, "{}_{:02d}".format(label, i), at, (0, 0, yaw))
+        act.static_mesh_component.set_static_mesh(m)
+        act.set_actor_scale3d(unreal.Vector(k, k, k))
+        setp(act.static_mesh_component, cast_shadow=spec["length_cm"] * size_k > 12)
         if first is None:
-            first = a
+            first = act
         else:
-            a.attach_to_actor(first, "", unreal.AttachmentRule.KEEP_WORLD,
-                              unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD)
+            act.attach_to_actor(first, "", unreal.AttachmentRule.KEEP_WORLD,
+                                unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD)
     return first
 
 
+def school(label, species, center, radii, heading, count, seed):
+    """Стайка: случайные точки в эллипсоиде, курс ±12°, размер ±15%."""
+    rng = random.Random(seed)
+    placed = 0
+    while placed < count:
+        p = [rng.uniform(-1, 1) for _ in range(3)]
+        if sum(v * v for v in p) > 1:
+            continue
+        loc = tuple(center[i] + p[i] * radii[i] for i in range(3))
+        species_fish("{}_{:02d}".format(label, placed), species, loc,
+                     heading + rng.uniform(-12, 12), size_k=rng.uniform(0.85, 1.15))
+        placed += 1
+
+
 def fish():
-    # Большая белая ~4.5 м, проходит поперёк кадра на среднем плане.
+    # Большая белая ~4.5 м, проходит над рифом.
     skeletal_fish("GreatWhite", SHARK + "great_white", SHARK + "great_whiteswimming",
-                  450, (700, -150, 260), yaw=0)
+                  450, SHARK_LOC, yaw=10)
 
     # Золотая рыбка (редкий гость) ~22 см.
     gold_parts = [GOLD + n for n in ("Object_16", "Object_18", "Object_20", "Object_22", "Object_24",
                                      "Object_80", "Object_82", "Object_84", "Object_86")]
     skeletal_fish("Goldfish", GOLD + "Object_14", GOLD + "ryukin_goldfish_Anim",
-                  22, (-350, 120, 110), yaw=200, parts=gold_parts)
+                  22, GOLD_LOC, yaw=200, parts=gold_parts)
 
-    # Клоуны ~10 см, группка у дна (анемона появится вместе со сканами).
-    clown = [CLOWN + "defaultMaterial_ea81d87f7946c9e896f7f6a321736db5", CLOWN + "defaultMaterial"]
-    for i, (x, y, z, yaw) in enumerate([(-420, -60, 60, 30), (-440, -20, 75, 160), (-400, -100, 50, 250)]):
-        static_fish("Clown%d" % i, clown, 10, (x, y, z), yaw)
+    # Клоуны ~10 см у мозгового коралла (анемоны нет среди бесплатных сканов).
+    for i, (x, y, z, heading) in enumerate(CLOWNS):
+        species_fish("Clown%d" % i, "clownfish", (x, y, z), heading)
+
+    # Стайки сержант-майоров (карибская рыба-ласточка) и французский ангел — «герой».
+    for i, (center, radii, heading, count) in enumerate(SCHOOLS):
+        school("School%d" % i, "damselfish", center, radii, heading, count, seed=11 + i)
+    species_fish("Angelfish", "french_angelfish", ANGEL_LOC, 110)  # боком к Cam_Reef
 
 
 # --- камеры --------------------------------------------------------------------
@@ -294,10 +374,18 @@ def camera(label, loc, look_at, focal=24.0, focus=None):
 
 
 def cameras():
-    camera("Cam_Wide", (-900, 0, 180), (600, 0, 150), focal=20.0, focus=1200)
-    camera("Cam_Shark", (250, -700, 240), (700, -150, 260), focal=35.0)
-    camera("Cam_Clowns", (-560, -40, 90), (-420, -60, 62), focal=50.0)
-    camera("Cam_Gold", (-460, 160, 120), (-350, 120, 110), focal=50.0)
+    # «стекло» стрима: низко, риф на весь кадр; в игре (-game, замер FPS) — вид игрока
+    wide = camera("Cam_Wide", (-520, 0, 120), (650, 0, 190), focal=18.0, focus=900)
+    wide.set_editor_property("auto_activate_for_player", unreal.AutoReceiveInput.PLAYER0)
+    camera("Cam_Shark", (150, -900, 300), SHARK_LOC, focal=35.0)
+    c = CLOWNS[0]
+    camera("Cam_Clowns", (c[0] - 150, c[1] + 40, c[2] + 15), c[:3], focal=50.0)
+    camera("Cam_Gold", (GOLD_LOC[0] - 110, GOLD_LOC[1] + 30, GOLD_LOC[2] + 10), GOLD_LOC, focal=50.0)
+    camera("Cam_Reef", (-60, 60, 110), (320, 200, 120), focal=28.0, focus=250)
+    s = SCHOOLS[0][0]
+    camera("Cam_School", (s[0] - 420, s[1] - 250, s[2] - 40), s, focal=35.0)
+    # бросок акулы: низко у рифа, акула идёт из глубины прямо в объектив (build_sequence.py)
+    camera("Cam_Bite", (60, -60, 150), (600, 0, 185), focal=24.0, focus=180)
 
 
 new_level()
@@ -305,6 +393,7 @@ water_and_light()
 seabed()
 rocks()
 reef()
+marine_snow()
 fish()
 cameras()
 levels.save_current_level()
