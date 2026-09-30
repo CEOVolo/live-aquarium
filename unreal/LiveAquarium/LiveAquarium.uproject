@@ -4,12 +4,38 @@
 	"Category": "",
 	"Description": "Live Aquarium: UE5 look test (reef corner)",
 	"Plugins": [
-		{ "Name": "PythonScriptPlugin", "Enabled": true },
-		{ "Name": "EditorScriptingUtilities", "Enabled": true },
-		{ "Name": "MovieRenderPipeline", "Enabled": true },
-		{ "Name": "Interchange", "Enabled": true },
-		{ "Name": "InterchangeAssets", "Enabled": true },
-		{ "Name": "Niagara", "Enabled": true },
-		{ "Name": "AndroidFileServer", "Enabled": false }
+		{
+			"Name": "PythonScriptPlugin",
+			"Enabled": true
+		},
+		{
+			"Name": "EditorScriptingUtilities",
+			"Enabled": true
+		},
+		{
+			"Name": "MovieRenderPipeline",
+			"Enabled": true
+		},
+		{
+			"Name": "Interchange",
+			"Enabled": true,
+			"SupportedTargetPlatforms": [
+				"Win64",
+				"Linux",
+				"Mac"
+			]
+		},
+		{
+			"Name": "InterchangeAssets",
+			"Enabled": true
+		},
+		{
+			"Name": "Niagara",
+			"Enabled": true
+		},
+		{
+			"Name": "AndroidFileServer",
+			"Enabled": false
+		}
 	]
 }

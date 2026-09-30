@@ -16,7 +16,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import importlib  # noqa: E402
 import lt_common  # noqa: E402
 importlib.reload(lt_common)  # редактор держит модули между запусками
-from lt_common import FISH_SPECIES, MAP, MAT_DIR, WATER_HORIZON, actors, color, levels, log, setp, spawn
+from lt_common import (FISH_SPECIES, MAP, MAT_DIR, SCHOOLS, WATER_HORIZON, actors, color, levels, log, setp,
+                       spawn)
 
 FISH = "/Game/LookTest/Fish"
 SHARK = FISH + "/great_white/great_white/SkeletalMeshes/"
@@ -274,10 +275,6 @@ SHARK_LOC = (450, -250, 430)
 GOLD_LOC = (40, 180, 95)
 CLOWNS = [(60, -330, 55, 30), (35, -300, 70, 160), (85, -360, 45, 250), (20, -370, 60, 80)]
 ANGEL_LOC = (170, 140, 125)
-SCHOOLS = [  # центр, полуоси облака (см), курс (град), число рыб
-    ((430, 80, 210), (170, 110, 55), 205, 24),
-    ((180, -300, 120), (80, 60, 30), 60, 10),
-]
 
 
 def species_bounds(species):
