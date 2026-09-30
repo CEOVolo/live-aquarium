@@ -105,8 +105,8 @@ def water_and_light():
     dc.set_static_mesh(load("/Engine/BasicShapes/Sphere"))
     dc.set_material(0, load(MAT_DIR + "/M_WaterSky"))
     dome.set_actor_scale3d(unreal.Vector(4000, 4000, 4000))  # 4 км в диаметре
-    setp(dc, cast_shadow=False, affect_distance_field_lighting=False,
-         collision_enabled=unreal.CollisionEnabled.NO_COLLISION)
+    setp(dc, cast_shadow=False, affect_distance_field_lighting=False)
+    dc.set_collision_profile_name("NoCollision")   # иначе игрок «внутри» сферы застревает
 
     # Постобработка: ручная экспозиция (стабильная картинка для стрима), мягкий bloom, зерно.
     ppv = spawn(unreal.PostProcessVolume, "Post", (0, 0, 0))
@@ -138,10 +138,22 @@ def seabed():
     # запас за пределами рифа, чтобы край дна не попадал в кадр
     floor.set_actor_scale3d(unreal.Vector(REEF_X * 2.5 / 100, REEF_Y * 4 / 100, 1))
     smc.set_material(0, load(MAT_DIR + "/M_Sand"))
+    # тени принимает, но не отбрасывает: огромный не-Nanite меш переполнял разметку виртуальных теней
+    setp(smc, cast_shadow=False)
+
+
+def solid(mesh):
+    """Столкновения по самой геометрии (для игры: рыба и камера не проходят сквозь риф)."""
+    body = mesh.get_editor_property("body_setup")
+    flag = unreal.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE
+    if body is not None and body.get_editor_property("collision_trace_flag") != flag:
+        body.set_editor_property("collision_trace_flag", flag)
+        unreal.EditorAssetLibrary.save_loaded_asset(mesh)
+    return mesh
 
 
 def rock(label, name, loc, yaw=0.0, scale=1.0, tilt=(0.0, 0.0)):
-    mesh = load("{0}{1}/{1}_2k/StaticMeshes/{1}_2k".format(ROCKS, name))
+    mesh = solid(load("{0}{1}/{1}_2k/StaticMeshes/{1}_2k".format(ROCKS, name)))
     a = spawn(unreal.StaticMeshActor, label, loc, (tilt[0], tilt[1], yaw))
     a.static_mesh_component.set_static_mesh(mesh)
     a.set_actor_scale3d(unreal.Vector(scale, scale, scale))
@@ -160,7 +172,7 @@ def reef_piece(label, name, loc, yaw=0.0, size_m=None, sink_cm=5.0):
     Общий габарит считается по кускам; скан ставится центром по XY и низом на дно в loc.
     size_m — вписать по большей горизонтальной стороне (иначе натуральный размер).
     """
-    meshes = scan_meshes(name)
+    meshes = [solid(m) for m in scan_meshes(name)]
     lo = [1e9] * 3
     hi = [-1e9] * 3
     for m in meshes:
@@ -223,6 +235,7 @@ def marine_snow():
     c.set_static_mesh(meshes[0])
     c.set_material(0, load(MAT_DIR + "/M_MarineSnow"))
     setp(c, cast_shadow=False)
+    c.set_collision_profile_name("NoCollision")
     o, e = a.get_actor_bounds(False)
     log("marine snow: {:.0f} x {:.0f} x {:.0f} cm, z {:.0f}..{:.0f}".format(
         e.x * 2, e.y * 2, e.z * 2, o.z - e.z, o.z + e.z))
@@ -241,7 +254,12 @@ def rocks():
 
 # --- рыбы ----------------------------------------------------------------------
 
-def skeletal_fish(label, mesh_path, anim_path, length_cm, loc, yaw, pitch=0.0, parts=()):
+def tag(actor, *names):
+    """Теги актёра — по ним игра (Source/LiveAquarium) находит рыб и акулу."""
+    actor.set_editor_property("tags", [unreal.Name(n) for n in names])
+
+
+def skeletal_fish(label, mesh_path, anim_path, length_cm, loc, yaw, pitch=0.0, parts=(), tags=()):
     """Скелетная рыба с зацикленной анимацией.
 
     parts — дополнительные меши на том же скелете (золотая рыбка разбита на куски):
@@ -262,11 +280,14 @@ def skeletal_fish(label, mesh_path, anim_path, length_cm, loc, yaw, pitch=0.0, p
             anim_to_play=anim, saved_looping=True, saved_playing=True, saved_position=0.0,
             saved_play_rate=1.0))
         c.set_update_animation_in_editor(True)
+        c.set_collision_profile_name("NoCollision")
         if body is None:
             body = a
         else:
             a.attach_to_actor(body, "", unreal.AttachmentRule.KEEP_WORLD,
                               unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD)
+    if tags:
+        tag(body, *tags)
     log("{}: mesh {:.0f} cm -> scale {:.3f}, parts {}".format(label, mesh_length(mesh), k, len(parts)))
     return body
 
@@ -290,9 +311,10 @@ def species_bounds(species):
     return meshes, lo, hi
 
 
-def species_fish(label, species, loc, heading, size_k=1.0, cache={}):
+def species_fish(label, species, loc, heading, size_k=1.0, tags=(), cache={}):
     """Статичная рыба вида species (FISH_SPECIES): нос — по курсу heading (град), спина — вверх.
-    Плывёт на месте за счёт материала M_Fish; центр габарита — в loc."""
+    Плывёт на месте за счёт материала M_Fish; центр габарита — в loc. Подвижная и без коллизии:
+    в игре её двигает код (AquariumAmbience / рыба игрока), в ролике — секвенция."""
     spec = FISH_SPECIES[species]
     if species not in cache:
         cache[species] = species_bounds(species)
@@ -308,14 +330,19 @@ def species_fish(label, species, loc, heading, size_k=1.0, cache={}):
     first = None
     for i, m in enumerate(meshes):
         act = spawn(unreal.StaticMeshActor, "{}_{:02d}".format(label, i), at, (0, 0, yaw))
-        act.static_mesh_component.set_static_mesh(m)
+        smc = act.static_mesh_component
+        smc.set_mobility(unreal.ComponentMobility.MOVABLE)
+        smc.set_static_mesh(m)
+        smc.set_collision_profile_name("NoCollision")
         act.set_actor_scale3d(unreal.Vector(k, k, k))
-        setp(act.static_mesh_component, cast_shadow=spec["length_cm"] * size_k > 12)
+        setp(smc, cast_shadow=spec["length_cm"] * size_k > 12)
         if first is None:
             first = act
         else:
             act.attach_to_actor(first, "", unreal.AttachmentRule.KEEP_WORLD,
                                 unreal.AttachmentRule.KEEP_WORLD, unreal.AttachmentRule.KEEP_WORLD)
+    if tags:
+        tag(first, *tags)
     return first
 
 
@@ -329,14 +356,14 @@ def school(label, species, center, radii, heading, count, seed):
             continue
         loc = tuple(center[i] + p[i] * radii[i] for i in range(3))
         species_fish("{}_{:02d}".format(label, placed), species, loc,
-                     heading + rng.uniform(-12, 12), size_k=rng.uniform(0.85, 1.15))
+                     heading + rng.uniform(-12, 12), size_k=rng.uniform(0.85, 1.15), tags=(label,))
         placed += 1
 
 
 def fish():
     # Большая белая ~4.5 м, проходит над рифом.
     skeletal_fish("GreatWhite", SHARK + "great_white", SHARK + "great_whiteswimming",
-                  450, SHARK_LOC, yaw=10)
+                  450, SHARK_LOC, yaw=10, tags=("Shark",))
 
     # Золотая рыбка (редкий гость) ~22 см.
     gold_parts = [GOLD + n for n in ("Object_16", "Object_18", "Object_20", "Object_22", "Object_24",
@@ -346,12 +373,18 @@ def fish():
 
     # Клоуны ~10 см у мозгового коралла (анемоны нет среди бесплатных сканов).
     for i, (x, y, z, heading) in enumerate(CLOWNS):
-        species_fish("Clown%d" % i, "clownfish", (x, y, z), heading)
+        species_fish("Clown%d" % i, "clownfish", (x, y, z), heading, tags=("Clown",))
 
-    # Стайки сержант-майоров (карибская рыба-ласточка) и французский ангел — «герой».
+    # Стайки сержант-майоров (карибская рыба-ласточка) и французский ангел — «герой»
+    # (в игре — рыба игрока).
     for i, (center, radii, heading, count) in enumerate(SCHOOLS):
         school("School%d" % i, "damselfish", center, radii, heading, count, seed=11 + i)
-    species_fish("Angelfish", "french_angelfish", ANGEL_LOC, 110)  # боком к Cam_Reef
+    species_fish("Angelfish", "french_angelfish", ANGEL_LOC, 110, tags=("PlayerFish",))  # боком к Cam_Reef
+
+
+def player_start():
+    """Точка старта игры: перед рифом, лицом к нему (+X)."""
+    spawn(unreal.PlayerStart, "PlayerStart", (-250, 0, 150))
 
 
 # --- камеры --------------------------------------------------------------------
@@ -371,9 +404,8 @@ def camera(label, loc, look_at, focal=24.0, focus=None):
 
 
 def cameras():
-    # «стекло» стрима: низко, риф на весь кадр; в игре (-game, замер FPS) — вид игрока
-    wide = camera("Cam_Wide", (-520, 0, 120), (650, 0, 190), focal=18.0, focus=900)
-    wide.set_editor_property("auto_activate_for_player", unreal.AutoReceiveInput.PLAYER0)
+    # «стекло» стрима: низко, риф на весь кадр; в игре — вид по клавише V (тег StreamCam)
+    tag(camera("Cam_Wide", (-520, 0, 120), (650, 0, 190), focal=18.0, focus=900), "StreamCam")
     camera("Cam_Shark", (150, -900, 300), SHARK_LOC, focal=35.0)
     c = CLOWNS[0]
     camera("Cam_Clowns", (c[0] - 150, c[1] + 40, c[2] + 15), c[:3], focal=50.0)
@@ -393,5 +425,6 @@ reef()
 marine_snow()
 fish()
 cameras()
+player_start()
 levels.save_current_level()
 log("scene built: " + MAP)

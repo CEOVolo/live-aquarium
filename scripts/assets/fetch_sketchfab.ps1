@@ -1,4 +1,4 @@
-# Скачивание сканов рифа с Sketchfab по файлу временных ссылок.
+﻿# Скачивание сканов рифа с Sketchfab по файлу временных ссылок.
 # Ссылки выдаёт только залогиненная сессия Sketchfab: их собирает браузер пользователя
 # (скрипт на странице sketchfab.com) в lt_sketchfab_links.json в «Загрузках».
 #   powershell -File scripts/assets/fetch_sketchfab.ps1 [-Links путь] [-Folder sketchfab|fish]

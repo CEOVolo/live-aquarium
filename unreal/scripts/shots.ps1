@@ -1,4 +1,4 @@
-# Снять кадры в открытом редакторе и дождаться окончания.
+﻿# Снять кадры в открытом редакторе и дождаться окончания.
 #   powershell -File unreal/scripts/shots.ps1 [-Cams Cam_Wide,Cam_Shark]
 param([string[]]$Cams = @(), [int]$TimeoutSec = 1800)
 $ErrorActionPreference = "Stop"

@@ -1,4 +1,4 @@
-# Собрать MP4 (H.264) из кадров render_movie.py. ffmpeg — из pip-пакета imageio-ffmpeg системного Python.
+﻿# Собрать MP4 (H.264) из кадров render_movie.py. ffmpeg — из pip-пакета imageio-ffmpeg системного Python.
 #   powershell -File unreal/scripts/encode_movie.ps1 [-Out путь.mp4] [-Fps 30]
 param([string]$Out = "", [int]$Fps = 30)
 $ErrorActionPreference = "Stop"

@@ -1,4 +1,4 @@
-# Запуск Python-скрипта без окна редактора (commandlet, без рендера) и вывод строк LOOKTEST / ошибок.
+﻿# Запуск Python-скрипта без окна редактора (commandlet, без рендера) и вывод строк LOOKTEST / ошибок.
 # Для импорта и сборки, когда редактор закрыт. В открытом редакторе — ue_remote.py.
 #   powershell -File unreal/scripts/run.ps1 import_fish.py
 param(

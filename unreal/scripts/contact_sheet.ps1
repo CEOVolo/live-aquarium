@@ -1,4 +1,4 @@
-# Контактный лист из кадров lt_*.png (по маске) — для быстрого осмотра.
+﻿# Контактный лист из кадров lt_*.png (по маске) — для быстрого осмотра.
 #   powershell -File unreal/scripts/contact_sheet.ps1 -Pattern "lt_Tmp_*" -Out sheet.png [-Cols 4 -W 640]
 param([string]$Pattern = "lt_*.png", [string]$Out = "", [int]$Cols = 4, [int]$W = 640)
 Add-Type -AssemblyName System.Drawing

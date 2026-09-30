@@ -1,4 +1,4 @@
-# Открыть редактор с проектом пробы и дождаться Python Remote Execution.
+﻿# Открыть редактор с проектом пробы и дождаться Python Remote Execution.
 #   powershell -File unreal/scripts/open_editor.ps1 [-WithSound]
 # По умолчанию — без звука (-nosound): на этом ноутбуке живой звуковой поток Unreal
 # (Audient EVO4 + Wi-Fi Realtek RTL8852BE) обваливает интернет: скачивание 100 -> 7 Мбит/с,
@@ -7,6 +7,12 @@ param([switch]$WithSound,
       [string]$Engine = $(if ($env:UE_ROOT) { $env:UE_ROOT } else { "D:\UE\UE_5.8" }))
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $project = Join-Path $here "..\LiveAquarium\LiveAquarium.uproject" | Resolve-Path
+if ("$project" -match '[^\x00-\x7F]') {
+    # в проекте есть C++ (Source/): при изменениях редактор пересобирает модуль, а MSVC ломается на таких путях
+    "Project path has non-ASCII characters: $project"
+    "Run from an ASCII junction, e.g. powershell -File D:\Dev\live-aquarium\unreal\scripts\open_editor.ps1"
+    exit 1
+}
 $py = Join-Path $Engine "Engine\Binaries\ThirdParty\Python3\Win64\python.exe"
 $launch = @("`"$project`"", "-nosplash")
 if (-not $WithSound) { $launch += "-nosound" }

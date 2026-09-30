@@ -3,6 +3,13 @@
 	"EngineAssociation": "5.8",
 	"Category": "",
 	"Description": "Live Aquarium: UE5 look test (reef corner)",
+	"Modules": [
+		{
+			"Name": "LiveAquarium",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
 	"Plugins": [
 		{
 			"Name": "PythonScriptPlugin",

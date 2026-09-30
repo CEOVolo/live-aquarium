@@ -1,4 +1,4 @@
-# Скачивание CC0-ассетов Poly Haven для пробы картинки (2K).
+﻿# Скачивание CC0-ассетов Poly Haven для пробы картинки (2K).
 #   powershell -File scripts/assets/fetch_polyhaven.ps1
 # Текстуры -> assets/textures/raw/<id>/, модели (glTF) -> assets/models/raw/polyhaven/<id>/
 param([string]$Res = "2k")

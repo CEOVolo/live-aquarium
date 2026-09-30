@@ -1,4 +1,4 @@
-# Замер FPS в реальном времени: уровень пробы как игра (-game) 1920x1080 с камеры Cam_Wide,
+﻿# Замер FPS в реальном времени: уровень пробы как игра (-game) 1920x1080 с камеры стрима Cam_Wide (-streamview),
 # время кадров — CSV-профайлер движка; сводка — fps_report.py (первые кадры прогрева отбрасываются).
 #   powershell -File unreal/scripts/measure_fps.ps1 [-Frames 1800] [-Skip 600]
 # Для чистого замера редактор лучше закрыть: он делит с игрой видеокарту.
@@ -16,7 +16,7 @@ $before = @($csvDirs | ForEach-Object { Get-ChildItem $_ -Filter *.csv -ErrorAct
 # -ResX/-ResY перебивает сохранённый GameUserSettings (1280x720) — разрешение задаём командой r.SetRes,
 # масштаб рендера — 100% (без апскейла).
 & (Join-Path $Engine "Engine\Binaries\Win64\UnrealEditor-Cmd.exe") $project "/Game/LookTest/Maps/Reef" -game -windowed `
-    -nosplash -nosound "-ExecCmds=r.SetRes 1920x1080w,r.ScreenPercentage 100" `
+    -nosplash -nosound -streamview "-ExecCmds=r.SetRes 1920x1080w,r.ScreenPercentage 100" `
     "-csvCaptureFrames=$Frames" -ExitAfterCsvProfiling 2>&1 | Out-Null
 
 $csv = $csvDirs | ForEach-Object { Get-ChildItem $_ -Filter *.csv -ErrorAction SilentlyContinue } |
