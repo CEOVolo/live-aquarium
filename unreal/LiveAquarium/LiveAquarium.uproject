@@ -1,0 +1,15 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "5.8",
+	"Category": "",
+	"Description": "Live Aquarium: UE5 look test (reef corner)",
+	"Plugins": [
+		{ "Name": "PythonScriptPlugin", "Enabled": true },
+		{ "Name": "EditorScriptingUtilities", "Enabled": true },
+		{ "Name": "MovieRenderPipeline", "Enabled": true },
+		{ "Name": "Interchange", "Enabled": true },
+		{ "Name": "InterchangeAssets", "Enabled": true },
+		{ "Name": "Niagara", "Enabled": true },
+		{ "Name": "AndroidFileServer", "Enabled": false }
+	]
+}

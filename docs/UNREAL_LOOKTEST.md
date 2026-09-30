@@ -18,9 +18,20 @@
 2. Epic Games Launcher → Unreal Engine 5 (последняя 5.x). Около 100 ГБ свободного места с учётом ассетов.
 3. Blender 5.x — по желанию, для доводки моделей (`scripts/models/prepare.py` работает и там).
 4. Клонировать репозиторий, выполнить `git lfs install`, `npm install`, `npm test` — всё должно быть зелёным.
-5. Проект Unreal создавать в `unreal/` (шаблон Blank, C++ не обязателен). Для `.uasset`/`.umap` сразу включить Git LFS: `git lfs track "*.uasset" "*.umap"`. `Saved/`, `Intermediate/`, `DerivedDataCache/`, `Binaries/` — в `.gitignore`.
+5. Проект Unreal — `unreal/LiveAquarium/` (без C++). **В git только скрипты и конфиги**: `Content/` и скачанные ассеты в `.gitignore` (1,2 ГБ + 0,7 ГБ не влезают в бесплатный Git LFS), сцена целиком пересобирается скриптами.
 
-Сцену собирать **Python-скриптами редактора** (`unreal` module) в `unreal/scripts/`: импорт ассетов, расстановка, материалы, свет, камеры. Так сцену можно пересобрать и менять кодом, а не только руками в редакторе. Скрипты запускаются через Python-консоль редактора или `UnrealEditor-Cmd.exe <проект>.uproject -ExecutePythonScript=<скрипт>`. Кадры — Movie Render Queue или `HighResShot`.
+Сцену собирать **Python-скриптами редактора** (`unreal` module) в `unreal/scripts/`: импорт ассетов, расстановка, материалы, свет, камеры. Так сцену можно пересобрать и менять кодом, а не только руками в редакторе.
+
+### Как пересобрать сцену с нуля
+
+Скрипты выполняются в **открытом** редакторе через Python Remote Execution (включено в `Config/DefaultEngine.ini`); окно проекта не закрывать, свернуть можно. `$py` — Python движка: `D:\UE\UE_5.8\Engine\Binaries\ThirdParty\Python3\Win64\python.exe`.
+
+1. Ассеты: `scripts/assets/fetch_polyhaven.ps1` (CC0, без входа); сканы Sketchfab — только из залогиненного браузера: скрипт на странице sketchfab.com собирает временные ссылки в `lt_sketchfab_links.json` («Загрузки»), затем `scripts/assets/fetch_sketchfab.ps1` (ссылки живут минуты). Модели и авторы — в `assets/models/CREDITS.md`.
+2. Открыть `unreal/LiveAquarium/LiveAquarium.uproject`.
+3. По порядку: `$py unreal/scripts/ue_remote.py import_fish.py`, затем `import_env.py`, `import_reef.py`, `build_materials.py`, `build_scene.py`.
+4. Кадры: `powershell -File unreal/scripts/shots.ps1 [-Cams Cam_Wide,...]` → `unreal/LiveAquarium/Saved/Screenshots/WindowsEditor/lt_<камера>.png`.
+
+Грабли: Python редактора держит модули между запусками (скрипты делают `importlib.reload(lt_common)`); материалы не удалять и не пересоздавать — уровень теряет ссылки (серый материал по умолчанию), `fresh_material` вычищает узлы в существующем; безымянные входы узлов (Desaturation, Clamp) из Python не подключаются; «Use Less CPU when in Background» выключено в `Config/DefaultEditorSettings.ini`, иначе редактор в фоне не рендерит кадры; `UnrealEditor.exe -ExecutePythonScript` закрывает редактор сразу после скрипта — для рендера не годится.
 
 ## Что делаем в пробе
 

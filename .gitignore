@@ -13,3 +13,10 @@ unreal/**/Binaries/
 unreal/**/Intermediate/
 unreal/**/Saved/
 unreal/**/DerivedDataCache/
+__pycache__/
+# Only scripts and configs of the look test go to git: Content/ is rebuilt by unreal/scripts/,
+# downloaded assets are fetched again by scripts/assets/ (see docs/UNREAL_LOOKTEST.md)
+unreal/**/Content/
+assets/models/raw/sketchfab/
+assets/models/raw/polyhaven/
+assets/textures/raw/
